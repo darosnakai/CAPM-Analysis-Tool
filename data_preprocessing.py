@@ -4,6 +4,7 @@ import plotly as pl
 import dash as ds
 import yfinance as yf
 import time
+import json
 
 #Class serves to save files if needed. In case the user prefers to use local files instead of fetching from API
 #Fetching a lot of data from the API can be inefficient, that is the reason for this file
@@ -52,4 +53,30 @@ class DataPreprocessor:
         hist_ticker.to_csv(pathname)
         return pathname
     
+    def save_tickers_to_json(self):
+        #Originally had wikipedia page (List of SP500 tickers) saved as html
+        #This function converted this html file to a json file
+        filepath = "capm-scatter-plot/data/sp500_components.html"
+        print(f"Attempting to read file at: {filepath}")
+
+        all_stocks = pd.read_html(filepath)[0]
+        
+        #get value at rows i, column 0 (first column)
+        all_tickers = [all_stocks.iloc[i, 0] for i in range(len(all_stocks))]
+        
+        # Create dropdown options
+        ticker_options = [{'label': ticker, 'value': ticker} for ticker in all_tickers]
+
+        with open('capm-scatter-plot/data/sp500_tickers.json','w') as f:
+            json.dump(ticker_options,f)
+        
+        print("Tickers saved to sp500_tickers.json")
+        return True
+    
     #Since files are already processed, not much is needed in this part
+
+data = DataPreprocessor()
+
+all_tickers = data.save_tickers_to_json()
+
+print(len(all_tickers))

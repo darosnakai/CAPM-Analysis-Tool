@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from dash.exceptions import PreventUpdate
 from ticker_analyzer import TickerReturns
+import json
 
 #Creating instance for CAPMRegression
 capm_regression = TickerReturns()
@@ -24,21 +25,12 @@ colors = {
 
 def get_all_tickers():
     try:
-        filepath = "capm-scatter-plot/data/sp500_components.html"
-        print(f"Attempting to read file at: {filepath}")
-
-        all_stocks = pd.read_html(filepath)[0]
-        
-        #get value at rows i, column 0 (first column)
-        all_tickers = [all_stocks.iloc[i, 0] for i in range(len(all_stocks))]
-        
-        # Create dropdown options
-        ticker_options = [{'label': ticker, 'value': ticker} for ticker in all_tickers]
+        with open('capm-scatter-plot/data/sp500_tickers.json', 'r') as f:
+            ticker_options = json.load(f)
         return ticker_options
-    
     except Exception as e:
         print(f"Error loading tickers: {e}")
-        #Using magnificent 7 as fallback in case function does not run properly
+        # Using magnificent 7 as fallback
         fallback_tickers_mag_7 = ["AAPL","MSFT","TSLA","GOOG","AMZN","NVDA","META"]
         return [{'label': ticker, 'value': ticker} for ticker in fallback_tickers_mag_7]
 

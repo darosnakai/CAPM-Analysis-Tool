@@ -21,7 +21,7 @@ While CAPM technically gives us an estimate of future expected returns based on 
 ## Interpreting Results
 The application uses the yFinance module to extract monthly returns of a given stocks (selected by the user) and calculates their excess returns when compared to the risk-free rate (Excess Returns = Asset Returns - Risk-Free Returns). It does the same calculation for the S&P500. For each monthly interval, the application will calculate the given excess return of the asset and the S&P500, finally plotting them all in a scatter plot. Each blue dot in the plot corresponds to the Excess Returns of the asset and of the S&P500 at each given month in the past 20 years:
 
-SCATTER PLOT HERE
+<img src="screenshots/capm-plot-example.png" alt="CAPM Scatter Plot Example" width="700"/>
 
 ### Regression (Best-Fitting) Line (y = βx + α)
 The model performs linear regression using the plotted points, creating the orange best-fitting line, and calculates R-Squared. Simply, linear regression is responsible for analyzing all the points in the scatter plot and calculating what is the line that best fits to all points together. This linear regression is responsible for finding the Beta (β) and Alpha (α), which correspond to the slope (β) and y-intercept (α) of the line, respectively. 
