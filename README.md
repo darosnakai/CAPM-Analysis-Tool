@@ -3,6 +3,8 @@
 ## Overview
 This application provides Capital Asset Pricing Model analysis tool for stocks listed in the S&P500, allowing users to calculate Expected Returns, Beta and Alpha for the given asset. The appliction uses 20-year historical data from Yahoo Finance (using the yfinance API), Plotly and Dash for plotting the graph. 
 
+[You can check the results here.](https://github.com/darosnakai/CAPM-Analysis-Tool/screenshots/)
+
 ## What is CAPM?
 CAPM is a model that measures an asset's expected returns based on systematic risk (undiversifiable risk). It quantifies how much an asset moves to the overall market or a proxy.
 
