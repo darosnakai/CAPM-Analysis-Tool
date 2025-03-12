@@ -1,9 +1,8 @@
 import pandas as pd
-import numpy as np
-import plotly as pl
-import dash as ds
 import yfinance as yf
 import time
+import statsmodels.api as sm
+from statsmodels.regression.rolling import RollingOLS
 
 start_time = time.time()
 
@@ -208,3 +207,54 @@ class TickerReturns():
         self.ticker_excess_returns = combined_df_filtered[excess_returns_col]
     
         return self.ticker_excess_returns
+    
+    #Calculating Rolling beta for each ticker given a specific window size (in months)
+    #Default window size is set for 12 (12 months)
+    #This method uses the OLS method (same used for the beta caculation in plotly-dash app) in order...
+    #... to maintain the same beta calculation as in the application
+    def calculate_rol_analysis_ols(self,ticker,window_size = 12):
+        excess_returns_ticker_df = self.ticker_excess_returns_df(ticker)
+        excess_returns_sp500 = self.get_sp500_excess_returns_df()
+
+        #Combining them into a single dataframe for the ols linear regression calculation
+        combined_df = pd.DataFrame({
+            'ticker_excess':excess_returns_ticker_df,
+            'sp500_excess':excess_returns_sp500
+        })
+
+        combined_df = combined_df.dropna()
+        
+        #Endogenous variable (y) - refers to the dependent variable (tickers excess returns)
+        endo = combined_df['ticker_excess']
+
+        #Exogenous variable (x) - refers to the independent variable (sp500 excess returns)
+        exog = sm.add_constant(combined_df['sp500_excess'])
+
+        #Rolling windows regression
+        rols = RollingOLS(endo,exog,window=window_size)
+
+        #Fitting model and getting results
+        results = rols.fit()
+
+        r_squared_df = results.rsquared
+
+        #fig = results.plot_recursive_coefficient(variables=["sp500_excess"],figsize=(15,5))
+
+        #Showing parameters of the line generated
+        #These parameters are the y-intercept (alpha) and the slope (beta) of the line
+        parameters_df = results.params
+
+        #Creating empy column to add the R-Squared
+        parameters_df["R2"] = r_squared_df
+
+        parameters_df = parameters_df.dropna()
+        #const column = represents the y-intercept (jansens alpha)
+        #sp500_excess column = represent the rolling beta values (beta for each window size - last 12 months) and then moving that window forward for the next month
+
+        parameters_df = parameters_df.rename(columns={
+            "const":"Alpha",
+            "sp500_excess":"Beta"
+        })
+
+        #Returning a dataframe with the alphas and betas for the given rolling windows for a particular stock
+        return parameters_df
