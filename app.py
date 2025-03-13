@@ -122,7 +122,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
     dcc.Markdown('''
     **Purpose and Objective**
     This WebApp uses the yFinance, Plotly, Dash and OLS APIs, allowing the user to analyze the risk-return relationship of any stocks within the S&P 500. The program will calculate the Betas,
-                 Jansen's Alphas (using the OLS best-fitting line module), R2 (of the best-fitting line), Sharpe Ratio, Treynor Ratio and Rolling CAPM Analysis (Rolling Beta, Rolling Alpha and
+                 Jensen's Alphas (using the OLS best-fitting line module), R2 (of the best-fitting line), Sharpe Ratio, Treynor Ratio and Rolling CAPM Analysis (Rolling Beta, Rolling Alpha and
                  Rolling R2). This provides the user a comprehensive understanding and a clear visualization of assets' risk, and their relationship with the S&P 500.
                  
     **Analysis Tool**
@@ -349,7 +349,7 @@ def update_output_analysis(n_clicks,selected_tickers):
     rf = risk_free_rate.mean()
 
     #DataFram that will contain all betas, alphas, R2 and Treynor Ratio of selected stocks
-    stocks_info = pd.DataFrame(columns = ['Ticker','Beta','Alpha','R2','Treynor Ratio','Sharpe Ratio'])
+    stocks_info = pd.DataFrame(columns = ['Ticker','Beta','Alpha (%)','R2','Treynor Ratio (%)','Sharpe Ratio', 'Annual Alpha (%)'])
     
     #Running the Analysis from the ticker_analyzer file
     #Each iteration will generate a scatter plot for a given ticker with the S&P 500
@@ -389,8 +389,13 @@ def update_output_analysis(n_clicks,selected_tickers):
 
         #Rounding each information
         beta = round(beta,3)
-        alpha = round(alpha,3)
+        alpha_rounded = round(alpha,3)
         r_squared = round(r_squared,3)
+
+        #Making Alpha annualized
+        annual_alpha = alpha*12
+        annual_alpha = round(annual_alpha,3)
+        
 
         #CAPM formula is: E[rA] = rf + βA × (E[rm] - rf)
         #rf and E[rm] are the same for all assets, so calculated before for loop
@@ -400,15 +405,20 @@ def update_output_analysis(n_clicks,selected_tickers):
         #Average excess return of each asset / Asset Beta
         mean_excess_returns = ticker_excess_returns_df.mean()
         treynor_ratio = mean_excess_returns/beta
+
+        #Data is in monthly timeframe, so I need to make it annualized
+        treynor_ratio = treynor_ratio*12
         treynor_ratio = round(treynor_ratio,3)
 
         #Sharpe Ratio = (Portfolio Return - Risk-Free Rate) / Standard deviation of portfolio's excess returns
         std_dev_excess_returns = ticker_excess_returns_df.std()
-        sharpe_ratio = mean_excess_returns/std_dev_excess_returns
+        #Data is in monthly timeframe, so I need to make it annualized
+        #Multiplying by sqrt(12) because sharpe ratio uses std deviation (has to be sqrt of time)
+        sharpe_ratio = (mean_excess_returns/std_dev_excess_returns)*(12**0.5)
         sharpe_ratio = round(sharpe_ratio,3)
 
         #Saving the Beta, Alpha, R2, Treynor and Sharpe Ratio of each ticker to the dataframe
-        stocks_info.loc[each_ticker] = [each_ticker, beta, alpha, r_squared, treynor_ratio,sharpe_ratio]
+        stocks_info.loc[each_ticker] = [each_ticker, beta, alpha_rounded, r_squared, treynor_ratio,sharpe_ratio, annual_alpha]
  
         #Updating the points of the scatter plot to match the color of the entire page
         scatter_fig.update_traces(
@@ -440,7 +450,7 @@ def update_output_analysis(n_clicks,selected_tickers):
                 width=2.5,             
             ),
             showlegend=True,        
-            name=f"Best-Fitting Line: Beta(β)={beta:.3f}; Alpha(α)={alpha:.3f}; R²={r_squared:.3f}"
+            name=f"Best-Fitting Line: Beta(β)={beta:.3f}; Alpha(α)={alpha_rounded:.3f}; R²={r_squared:.3f}"
         )
         
         #Modifying Appearance of the Plot
@@ -465,14 +475,14 @@ def update_output_analysis(n_clicks,selected_tickers):
         ])
     
    
-    #Creating DataTable with all the information inside the dataframe stocks_info
+    #Creating DataTable with all the information inside the dataframe stocks_info apart from the annualized alpha
     stocks_table = go.Figure(data=[go.Table(
         header=dict(values=list(stocks_info.columns),
                     line_color=colors['line_color_table'],
                     fill_color=colors['fill_color_col_table'],
                     align='center',
                     height = 30),
-        cells=dict(values=[stocks_info.index,stocks_info['Beta'],stocks_info['Alpha'],stocks_info['R2'],stocks_info['Treynor Ratio'],stocks_info['Sharpe Ratio']],
+        cells=dict(values=[stocks_info.index,stocks_info['Beta'],stocks_info['Alpha (%)'],stocks_info['R2'],stocks_info['Treynor Ratio (%)'],stocks_info['Sharpe Ratio'],stocks_info['Annual Alpha (%)']],
                    fill_color=colors['fill_color_table'],
                    line_color=colors['line_color_table'],
                    align='center',
@@ -485,7 +495,7 @@ def update_output_analysis(n_clicks,selected_tickers):
     stocks_table.update_layout(
         paper_bgcolor=colors['background'],
         font_color=colors['text'],
-        width=750,  # Make the overall width much smaller
+        width=750,  
         height=table_height,  # Keep height small too
         margin=dict(l=5, r=5, t=5, b=10),  # Minimal margins
         autosize=False
@@ -494,11 +504,11 @@ def update_output_analysis(n_clicks,selected_tickers):
     #Bar chart with all (Jensen's) Alphas for comparison
     alpha_fig = px.bar(stocks_info,
                        x = 'Ticker',
-                       y = 'Alpha',
+                       y = 'Annual Alpha (%)',
                        title= 'Jensen\'s Alpha for each Ticker',
-                       labels= {'Alpha': 'Jensen\'s Alpha (%)'},
-                       text = 'Alpha',
-                       color='Alpha',
+                       labels= {'Annual Alpha (%)': 'Jensen\'s Alpha (%)'},
+                       text = 'Annual Alpha (%)',
+                       color='Annual Alpha (%)',
                        color_continuous_scale=[
                             (0.0, '#891f00'),   # Red for negative values
                             (0.5, "white"), # White for zero
@@ -530,10 +540,10 @@ def update_output_analysis(n_clicks,selected_tickers):
     #Creating bar chart with treynor ratios of selected stocks
     treynor_fig = px.bar(stocks_info,
                          x = 'Ticker',
-                         y= 'Treynor Ratio',
+                         y= 'Treynor Ratio (%)',
                          title= 'Treynor Ratio for each Ticker',
-                        text = 'Treynor Ratio',
-                        color='Treynor Ratio',
+                        text = 'Treynor Ratio (%)',
+                        color='Treynor Ratio (%)',
                         color_continuous_scale=[
                                 (0.0, '#891f00'),   # Red for negative values
                                 (0.5, "white"), # White for zero
@@ -585,7 +595,7 @@ def update_output_analysis(n_clicks,selected_tickers):
                     line=dict(color='black', width=1.5, dash='dash')
                 )
     
-    sharpe_fig.update_traces(texttemplate='%{text:.3f}%', textposition='outside')
+    sharpe_fig.update_traces(texttemplate='%{text:.3f}', textposition='outside')
 
     sharpe_fig.update_layout(
         plot_bgcolor=colors['background'],
@@ -639,7 +649,7 @@ def update_output_analysis(n_clicks,selected_tickers):
                          the market and **Postive Alpha** indicates the asset is overperforming the market.
                          ''', style=text_styles['markdown']),
             
-            html.Div("Jensen's Alpha:", style=text_styles['subtitle']),
+            html.Div("Annualized Jensen's Alpha:", style=text_styles['subtitle']),
             
             html.Div([alpha_bar_chart], style={
                 'display': 'flex',
@@ -650,13 +660,13 @@ def update_output_analysis(n_clicks,selected_tickers):
 
             dcc.Markdown('''**Treynor Ratio:** A performance metric that measures the excess return per unit of systematic risk. 
                          It evaluates how much return an asset/portfolio generates for each unit of market risk (beta) it takes.
-                         Unlike the Sharpe Ratio, which uses total risk (standard deviation) in its calculation, the Treynor 
-                         Ratio only considers systematic risk (risk that cannot be diversified away), hence using Beta for the 
-                         calculation. A higher Treynor Ratio indicates better risk-adjusted performance relative to market risk, meaning
-                         the investment is generating more excess returns per unit of systematic risk (beta).
+                         Treynor Ratio only considers systematic risk (risk that cannot be diversified away), hence using Beta for the 
+                         calculation. Higher values suggest an asset has generated strong excess returns relative to its systematic 
+                         risk (beta). Lower values indicate a lower risk-adjusted return, meaning the investment is generating less 
+                         excess returns per unit of systematic risk (beta).
             ''', style=text_styles['markdown']),
 
-            html.Div("Treynor Ratio:", style=text_styles['subtitle']),
+            html.Div("Annualized Treynor Ratio:", style=text_styles['subtitle']),
             
             html.Div([treynor_bar_chart], style={
                 'display': 'flex',
@@ -667,10 +677,14 @@ def update_output_analysis(n_clicks,selected_tickers):
 
             dcc.Markdown('''**Sharpe Ratio:** Similar to the Treynor Ratio, Sharpe Ratio also measures the return of an investment with its risk.
                          Instead of using the beta for calculating market risk (Treynor Ratio), the Sharpe Ratio uses uses total risk (standard deviation) in its 
-                         calculation. 
+                         calculation. Higher Sharpe ratios indicate more efficient investments that deliver better returns per unit of overall risk. Lower Sharpe
+                         Ratios indicates investments that provide weak returns per unit of overall risk, meaning that for the amount of volatility investors 
+                         have endured with this investment, they've received less compensation in excess returns.
+
+
             ''', style=text_styles['markdown']),
 
-            html.Div("Sharpe Ratio:", style=text_styles['subtitle']),
+            html.Div("Annualized Sharpe Ratio:", style=text_styles['subtitle']),
             
             html.Div([sharpe_bar_chart], style={
                 'display': 'flex',

@@ -71,3 +71,6 @@ A performance metric that measures the excess return per unit of systematic risk
 Similar to the Treynor Ratio, Sharpe Ratio also measures the return of an investment with its risk. Instead of using the beta for calculating market risk (Treynor Ratio), the Sharpe Ratio uses uses total risk (standard deviation) in its calculation. 
 
 <img src="screenshots/4-sharpe-ratio.png" alt="CAPM Scatter Plot - Apple Example"/>
+
+# Future Work
+- Add Rolling Sharpe Ratio - understand how 
