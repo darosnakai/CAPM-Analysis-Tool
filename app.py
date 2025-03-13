@@ -349,7 +349,7 @@ def update_output_analysis(n_clicks,selected_tickers):
     rf = risk_free_rate.mean()
 
     #DataFram that will contain all betas, alphas, R2 and Treynor Ratio of selected stocks
-    stocks_info = pd.DataFrame(columns = ['Ticker','Beta','Alpha (%)','R2','Treynor Ratio (%)','Sharpe Ratio', 'Annual Alpha (%)'])
+    stocks_info = pd.DataFrame(columns = ['Ticker','Beta','Monthly Expected Returns (%)', 'Alpha (%)','R2','Treynor Ratio (%)','Sharpe Ratio', 'Annual Alpha (%)'])
     
     #Running the Analysis from the ticker_analyzer file
     #Each iteration will generate a scatter plot for a given ticker with the S&P 500
@@ -401,6 +401,10 @@ def update_output_analysis(n_clicks,selected_tickers):
         #rf and E[rm] are the same for all assets, so calculated before for loop
         expected_returns = rf + beta*(sp500_expected_returns-rf)
 
+        #Making Expected Returns in %
+        expected_returns = expected_returns*100
+        expected_returns = round(expected_returns,3)
+
         #Treynor Ratio = (Portfolio Return - Risk-Free Rate) / Portfolio Beta
         #Average excess return of each asset / Asset Beta
         mean_excess_returns = ticker_excess_returns_df.mean()
@@ -418,7 +422,7 @@ def update_output_analysis(n_clicks,selected_tickers):
         sharpe_ratio = round(sharpe_ratio,3)
 
         #Saving the Beta, Alpha, R2, Treynor and Sharpe Ratio of each ticker to the dataframe
-        stocks_info.loc[each_ticker] = [each_ticker, beta, alpha_rounded, r_squared, treynor_ratio,sharpe_ratio, annual_alpha]
+        stocks_info.loc[each_ticker] = [each_ticker, beta, expected_returns, alpha_rounded, r_squared, treynor_ratio,sharpe_ratio, annual_alpha]
  
         #Updating the points of the scatter plot to match the color of the entire page
         scatter_fig.update_traces(
@@ -436,7 +440,7 @@ def update_output_analysis(n_clicks,selected_tickers):
         scatter_fig.add_annotation(
         x=-8, 
         y=17.5,   
-        text=f"{each_ticker} Expected Returns: {expected_returns:.2%}<br>Risk-Free Rate: {rf:.2%}<br>S&P500 Expected Returns: {sp500_expected_returns:.2%}",
+        text=f"{each_ticker} Expected Returns: {expected_returns}<br>Risk-Free Rate: {rf:.2%}<br>S&P500 Expected Returns: {sp500_expected_returns:.2%}",
         showarrow=False,
         align="left",
         font=dict(color=colors['text'])
@@ -482,7 +486,7 @@ def update_output_analysis(n_clicks,selected_tickers):
                     fill_color=colors['fill_color_col_table'],
                     align='center',
                     height = 30),
-        cells=dict(values=[stocks_info.index,stocks_info['Beta'],stocks_info['Alpha (%)'],stocks_info['R2'],stocks_info['Treynor Ratio (%)'],stocks_info['Sharpe Ratio'],stocks_info['Annual Alpha (%)']],
+        cells=dict(values=[stocks_info.index,stocks_info['Beta'],stocks_info['Monthly Expected Returns (%)'],stocks_info['Alpha (%)'],stocks_info['R2'],stocks_info['Treynor Ratio (%)'],stocks_info['Sharpe Ratio'],stocks_info['Annual Alpha (%)']],
                    fill_color=colors['fill_color_table'],
                    line_color=colors['line_color_table'],
                    align='center',
@@ -490,7 +494,7 @@ def update_output_analysis(n_clicks,selected_tickers):
                    columnwidth=[0.3, 0.3, 0.3])
         ])
     
-    table_height = 60 + (len(selected_tickers) * 30)
+    table_height = 100 + (len(selected_tickers) * 30)
 
     stocks_table.update_layout(
         paper_bgcolor=colors['background'],
