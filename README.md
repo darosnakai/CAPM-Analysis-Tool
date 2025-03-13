@@ -65,12 +65,9 @@ Measures how well the market's movements explain the asset's returns in each per
 ## Treynor Ratio
 A performance metric that measures the excess return per unit of systematic risk. It evaluates how much return an asset/portfolio generates for each unit of market risk (beta) it takes. Unlike the Sharpe Ratio, which uses total risk (standard deviation) in its calculation, the Treynor Ratio only considers systematic risk (risk that cannot be diversified away), hence using Beta for the calculation. A higher Treynor Ratio indicates better risk-adjusted performance relative to market risk, meaning the investment is generating more excess returns per unit of systematic risk (beta).
 
-<img src="screenshots/5-treynor-ratio.png" alt="CAPM Scatter Plot - Apple Example"/>
+<img src="screenshots/4-treynor-ratio.png" alt="CAPM Scatter Plot - Apple Example"/>
 
 ## Sharpe Ratio
 Similar to the Treynor Ratio, Sharpe Ratio also measures the return of an investment with its risk. Instead of using the beta for calculating market risk (Treynor Ratio), the Sharpe Ratio uses uses total risk (standard deviation) in its calculation. 
 
-<img src="screenshots/4-sharpe-ratio.png" alt="CAPM Scatter Plot - Apple Example"/>
-
-# Future Work
-- Add Rolling Sharpe Ratio - understand how 
+<img src="screenshots/5-sharpe-ratio.png" alt="CAPM Scatter Plot - Apple Example"/>
